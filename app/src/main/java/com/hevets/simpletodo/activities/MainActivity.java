@@ -1,4 +1,4 @@
-package com.hevets.simpletodo;
+package com.hevets.simpletodo.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+
+import com.hevets.simpletodo.R;
+import com.hevets.simpletodo.models.TodoItem;
 
 import org.apache.commons.io.FileUtils;
 
@@ -48,11 +51,9 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == RESULT_OK && requestCode == EDIT_ITEM_REQUEST_CODE) {
-            String editItemText = data.getExtras().getString("editItem");
-            int position = data.getExtras().getInt("position");
 
-            items.get(position);
-            items.set(position, editItemText);
+            TodoItem item = (TodoItem) data.getSerializableExtra("todoItem");
+            items.set(item.getPosition(), item.getTitle());
             syncItems(true);
         }
     }
@@ -81,18 +82,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(MainActivity.this, EditItemActivity.class);
-                i.putExtra("editItem", items.get(position));
-                i.putExtra("position", position);
+                TodoItem item = new TodoItem(position, items.get(position));
+                i.putExtra("todoItem", item);
                 startActivityForResult(i, EDIT_ITEM_REQUEST_CODE);
             }
         });
     }
 
     private File getFile() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-
-        return todoFile;
+        return new File(getFilesDir(), "todo.txt");
     }
 
     private void syncItems(Boolean shouldNotifyDataSetChanged) {
