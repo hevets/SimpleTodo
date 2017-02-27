@@ -5,43 +5,44 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
 import com.hevets.simpletodo.R;
+import com.hevets.simpletodo.adapters.TodoItemAdapter;
 import com.hevets.simpletodo.models.TodoItem;
+import com.raizlabs.android.dbflow.sql.language.SQLite;
 
-import org.apache.commons.io.FileUtils;
+import org.parceler.Parcels;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<String> items;
-    ArrayAdapter<String> itemsAdapter;
+    ArrayList<TodoItem> todoItems;
+    TodoItemAdapter itemsAdapter;
     ListView lvItems;
 
     // stores edit item request code
     // TODO: refactor into enum later to store different request types
     private final int EDIT_ITEM_REQUEST_CODE = 20;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        todoItems = new ArrayList<TodoItem>();
+
         // configure lvItems
         lvItems = (ListView) findViewById(R.id.lvItems);
 
-        // populate arraylist
+        // populate List of TodoItems
         readItems();
 
         // setup adapter and lvItems
-        itemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
+        itemsAdapter = new TodoItemAdapter(this, todoItems);
         lvItems.setAdapter(itemsAdapter);
         setupListViewListener();
     }
@@ -51,9 +52,8 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == RESULT_OK && requestCode == EDIT_ITEM_REQUEST_CODE) {
-
-            TodoItem item = (TodoItem) data.getSerializableExtra("todoItem");
-            items.set(item.getPosition(), item.getTitle());
+            TodoItem item = (TodoItem) Parcels.unwrap(data.getParcelableExtra("todoItem"));
+            todoItems.set(item.getPosition(), item);
             syncItems(true);
         }
     }
@@ -62,9 +62,16 @@ public class MainActivity extends AppCompatActivity {
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
         if (itemText.length() > 0) {
-            itemsAdapter.add(itemText);
+
+            // add to the adapter
+            TodoItem item = new TodoItem(todoItems.size(), itemText);
+            itemsAdapter.add(item);
+
+            // TODO: save to the database
+            item.save();
+
             etNewItem.setText("");
-            syncItems(false);
+            syncItems(false); // NOTE: could do a full sync here if i wasn't using add above (better to use add above)
         }
     }
 
@@ -72,7 +79,14 @@ public class MainActivity extends AppCompatActivity {
         lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                items.remove(position);
+                // Get the todoItem and remove it from the array list
+                TodoItem item = todoItems.get(position);
+                todoItems.remove(position);
+
+                // TODO: soft delete todo's here
+                item.delete();
+
+                // update the UI
                 syncItems(true);
                 return true;
             }
@@ -82,41 +96,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(MainActivity.this, EditItemActivity.class);
-                TodoItem item = new TodoItem(position, items.get(position));
-                i.putExtra("todoItem", item);
+                TodoItem item = todoItems.get(position);
+                i.putExtra("todoItem", Parcels.wrap(item));
                 startActivityForResult(i, EDIT_ITEM_REQUEST_CODE);
             }
         });
-    }
-
-    private File getFile() {
-        return new File(getFilesDir(), "todo.txt");
     }
 
     private void syncItems(Boolean shouldNotifyDataSetChanged) {
         if (shouldNotifyDataSetChanged) {
             itemsAdapter.notifyDataSetChanged();
         }
-
-        writeItems();
     }
 
     private void readItems() {
-        File file = getFile();
+        List<TodoItem> todosFromDB = SQLite.select()
+                .from(TodoItem.class)
+                .queryList();
 
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(file));
-        } catch (IOException e) {
-            items = new ArrayList<String>();
+        for(TodoItem item : todosFromDB) {
+            todoItems.add(item);
         }
     }
 
-    private void writeItems() {
-        File file = getFile();
-        try {
-            FileUtils.writeLines(file, items);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

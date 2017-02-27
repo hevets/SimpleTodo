@@ -19,7 +19,28 @@ android {
     }
 }
 
+def dbflow_version = "4.0.0-beta5"
+
 dependencies {
+
+    compile 'com.facebook.stetho:stetho:1.4.1'
+
+    // DBFlow
+    // annotationProcessor now supported in Android Gradle plugin 2.2
+    // See https://bitbucket.org/hvisser/android-apt/wiki/Migration
+    annotationProcessor "com.github.Raizlabs.DBFlow:dbflow-processor:${dbflow_version}"
+    compile "com.github.Raizlabs.DBFlow:dbflow-core:${dbflow_version}"
+    compile "com.github.Raizlabs.DBFlow:dbflow:${dbflow_version}"
+
+    // sql-cipher database encryption (optional)
+    // compile "com.github.Raizlabs.DBFlow:dbflow-sqlcipher:${dbflow_version}"
+
+
+    // Parcel
+    compile 'org.parceler:parceler-api:1.1.6'
+    annotationProcessor 'org.parceler:parceler:1.1.6'
+
+    // Default
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'

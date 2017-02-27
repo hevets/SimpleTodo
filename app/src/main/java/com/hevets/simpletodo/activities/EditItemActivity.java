@@ -9,6 +9,8 @@ import android.widget.EditText;
 import com.hevets.simpletodo.R;
 import com.hevets.simpletodo.models.TodoItem;
 
+import org.parceler.Parcels;
+
 public class EditItemActivity extends AppCompatActivity {
 
     private TodoItem todoItem;
@@ -19,7 +21,8 @@ public class EditItemActivity extends AppCompatActivity {
         setContentView(R.layout.activity_edit_item);
 
         // configure view with the intent coming in
-        configureView((TodoItem)getIntent().getSerializableExtra("todoItem"));
+
+        configureView((TodoItem) Parcels.unwrap(getIntent().getParcelableExtra("todoItem")));
     }
 
     // setup view
@@ -36,7 +39,7 @@ public class EditItemActivity extends AppCompatActivity {
         if (updatedItemTitle.length() > 0) {
             Intent i = new Intent();
             todoItem.setTitle(updatedItemTitle);
-            i.putExtra("todoItem", todoItem);
+            i.putExtra("todoItem", Parcels.wrap(todoItem));
             setResult(RESULT_OK, i);
             finish();
         }
