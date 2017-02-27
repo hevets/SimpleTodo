@@ -3,10 +3,12 @@ package com.hevets.simpletodo.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.hevets.simpletodo.R;
 import com.hevets.simpletodo.adapters.TodoItemAdapter;
@@ -19,6 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String TOAST_ADD = "added";
+    public static final String TOAST_UPDATED = "updated";
+    public static final String TOAST_REMOVE = "removed";
 
     ArrayList<TodoItem> todoItems;
     TodoItemAdapter itemsAdapter;
@@ -54,11 +60,16 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && requestCode == EDIT_ITEM_REQUEST_CODE) {
             TodoItem item = (TodoItem) Parcels.unwrap(data.getParcelableExtra("todoItem"));
             todoItems.set(item.getPosition(), item);
+            toastMessage(item.getTitle(), TOAST_UPDATED);
             syncItems(true);
         }
     }
 
     public void onAddItem(View v) {
+        addTodoItem();
+    }
+
+    private void addTodoItem() {
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
         if (itemText.length() > 0) {
@@ -69,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
             // TODO: save to the database
             item.save();
+
+            toastMessage(item.getTitle(), TOAST_ADD);
 
             etNewItem.setText("");
             syncItems(false); // NOTE: could do a full sync here if i wasn't using add above (better to use add above)
@@ -85,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // TODO: soft delete todo's here
                 item.delete();
+                toastMessage(item.getTitle(), TOAST_REMOVE);
 
                 // update the UI
                 syncItems(true);
@@ -101,6 +115,19 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(i, EDIT_ITEM_REQUEST_CODE);
             }
         });
+
+        findViewById(R.id.btnAddItem)
+                .setOnKeyListener(new View.OnKeyListener() {
+                    @Override
+                    public boolean onKey(View v, int keyCode, KeyEvent event) {
+                        if (event.getAction() == KeyEvent.KEYCODE_ENTER) {
+                            addTodoItem();
+                            return true;
+                        }
+
+                        return false;
+                    }
+                });
     }
 
     private void syncItems(Boolean shouldNotifyDataSetChanged) {
@@ -117,6 +144,10 @@ public class MainActivity extends AppCompatActivity {
         for(TodoItem item : todosFromDB) {
             todoItems.add(item);
         }
+    }
+
+    private void toastMessage(String msg, String type) {
+        Toast.makeText(getApplicationContext(), String.format("%s %s", msg, type), Toast.LENGTH_SHORT).show();
     }
 
 }
