@@ -27,7 +27,7 @@ public class EditItemActivity extends AppCompatActivity {
 
     // setup view
     private void configureView(TodoItem item) {
-        todoItem = new TodoItem(item.getPosition(), item.getTitle());
+        todoItem = new TodoItem(item.getId(), item.getTitle());
         ((EditText) findViewById(R.id.etEditItem)).setText(todoItem.getTitle());
     }
 

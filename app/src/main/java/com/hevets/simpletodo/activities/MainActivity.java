@@ -30,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     TodoItemAdapter itemsAdapter;
     ListView lvItems;
 
+    Integer currentItemPos;
+
     // stores edit item request code
     // TODO: refactor into enum later to store different request types
     private final int EDIT_ITEM_REQUEST_CODE = 20;
@@ -59,8 +61,14 @@ public class MainActivity extends AppCompatActivity {
 
         if (resultCode == RESULT_OK && requestCode == EDIT_ITEM_REQUEST_CODE) {
             TodoItem item = (TodoItem) Parcels.unwrap(data.getParcelableExtra("todoItem"));
-            todoItems.set(item.getPosition(), item);
+
+            if (currentItemPos != null) {
+                todoItems.set(currentItemPos, item);
+                currentItemPos = null;
+            }
+
             toastMessage(item.getTitle(), TOAST_UPDATED);
+            item.save();
             syncItems(true);
         }
     }
@@ -75,10 +83,9 @@ public class MainActivity extends AppCompatActivity {
         if (itemText.length() > 0) {
 
             // add to the adapter
-            TodoItem item = new TodoItem(todoItems.size(), itemText);
+            TodoItem item = new TodoItem(todoItems.size()+1, itemText);
             itemsAdapter.add(item);
 
-            // TODO: save to the database
             item.save();
 
             toastMessage(item.getTitle(), TOAST_ADD);
@@ -111,6 +118,8 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(MainActivity.this, EditItemActivity.class);
                 TodoItem item = todoItems.get(position);
+                // TODO: this is quite hacky, better would be to figure out how to just update the db and sync on changes instead of storing pos of things
+                currentItemPos = position;
                 i.putExtra("todoItem", Parcels.wrap(item));
                 startActivityForResult(i, EDIT_ITEM_REQUEST_CODE);
             }

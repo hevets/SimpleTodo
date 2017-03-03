@@ -17,18 +17,14 @@ public class TodoItem extends BaseModel {
     int id;
 
     @Column
-    int position;
-
-    @Column
     String title;
 
     // Needed by Parcel
     public TodoItem() {
     }
 
-    public TodoItem(int position, String title) {
-        this.id = position; // TODO: this is a total hack, super messy but its working with SQLite
-        this.position = position;
+    public TodoItem(int id, String title) {
+        this.id = id;
         this.title = title;
     }
 
@@ -38,14 +34,6 @@ public class TodoItem extends BaseModel {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getPosition() {
-        return position;
-    }
-
-    public void setPosition(int position) {
-        this.position = position;
     }
 
     public String getTitle() {
