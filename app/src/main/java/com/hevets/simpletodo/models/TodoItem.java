@@ -19,6 +19,9 @@ public class TodoItem extends BaseModel {
     @Column
     String title;
 
+    @Column
+    String priority;
+
     // Needed by Parcel
     public TodoItem() {
     }
@@ -43,4 +46,13 @@ public class TodoItem extends BaseModel {
     public void setTitle(String title) {
         this.title = title;
     }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
 }
