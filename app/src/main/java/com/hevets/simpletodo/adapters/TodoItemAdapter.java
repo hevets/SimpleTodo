@@ -1,6 +1,7 @@
 package com.hevets.simpletodo.adapters;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +28,9 @@ public class TodoItemAdapter extends ArrayAdapter<TodoItem> {
         }
 
         TextView tvTitle = (TextView) convertView.findViewById(R.id.tvTitle);
+        TextView tvPriority = (TextView) convertView.findViewById(R.id.tvPriority);
         tvTitle.setText(item.getTitle());
+        tvPriority.setText(item.getPriority());
         return convertView;
     }
 
